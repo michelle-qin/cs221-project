@@ -1,0 +1,395 @@
+<head>
+  <title>Sentiment Analysis</title>
+  <script src="plugins/main.js"></script>
+  <script src="grader-all.js"></script>
+  <link rel="stylesheet" type="text/css" href="plugins/main.css" />
+</head>
+
+<body
+  onload="onLoad('sentiment', '<a href=mailto:jkc1@stanford.edu>Junshen Kevin Chen<a>', '03/28/2021', 'https://edstem.org/us/courses/4864/discussion/349463')"
+>
+  <div id="assignmentHeader"></div>
+
+  <!------------------------------------------------------------>
+
+  Advice for this homework:
+  <ol class="problem">
+    <li>
+      Words are simply strings separated by whitespace. Note that words which
+      only differ in capitalization are considered separate (e.g.
+      <i>great</i> and <i>Great</i> are considered different words).
+    </li>
+    <li>
+      You might find some useful functions in <code>util.py</code>. Have a look
+      around in there before you start coding.
+    </li>
+  </ol>
+
+  <div class="problemTitle">Problem 1: Building intuition</div>
+
+  <p>
+    Here are two reviews of <i>Perfect Blue</i>, from
+    <a href="https://www.rottentomatoes.com">Rotten Tomatoes</a>:
+  </p>
+
+  <p>
+    <img width="600em" src="posreview.png" />
+    <img width="600em" src="negreview.png" />
+  </p>
+
+  <p>
+    Rotten Tomatoes has classified these reviews as "positive" and "negative,",
+    respectively, as indicated by the intact tomato on the left and the
+    splattered tomato on the right. In this assignment, you will create a simple
+    text classification system that can perform this task automatically.
+  </p>
+
+  <ol class="problem">
+    We'll warm up with the following set of four mini-reviews, each labeled
+    positive $(+1)$ or negative $(-1)$:
+    <ol>
+      <li>$(-1)$ pretty bad</li>
+      <li>$(+1)$ good plot</li>
+      <li>$(-1)$ not good</li>
+      <li>$(+1)$ pretty scenery</li>
+    </ol>
+    Each review $x$ is mapped onto a feature vector $\phi(x)$, which maps each
+    word to the number of occurrences of that word in the review. For example,
+    the first review maps to the (sparse) feature vector $\phi(x) =
+    \{\text{pretty}:1, \text{bad}:1\}$. Recall the definition of the hinge loss:
+    $$\text{Loss}_{\text{hinge}}(x, y, \mathbf{w}) = \max \{0, 1 - \mathbf{w}
+    \cdot \phi(x) y\},$$ where $x$ is the review text, $y$ is the correct label,
+    $\mathbf{w}$ is the weight vector.
+
+    <li class="writeup" id="1a">
+      Suppose we run stochastic gradient descent once for each of the 4 samples
+      in the order given above, updating the weights according to $$\mathbf{w}
+      \leftarrow \mathbf{w} - \eta \nabla_\mathbf{w}
+      \text{Loss}_{\text{hinge}}(x, y, \mathbf{w}).$$ After the updates, what
+      are the weights of the six words ("pretty", "good", "bad", "plot", "not",
+      "scenery") that appear in the above reviews?
+      <ul>
+        <li>Use $\eta = 0.1$ as the step size.</li>
+        <li>Initialize $\mathbf{w} = [0, 0,0,0,0, 0]$.</li>
+        <li>
+          The gradient $\nabla_\mathbf{w} \text{Loss}_{\text{hinge}}(x, y,
+          \mathbf{w}) = 0$ when margin is exactly 1.
+        </li>
+      </ul>
+      <div class="expected">
+        A weight vector that contains a numerical value for each of the tokens
+        in the reviews ("pretty", "good", "bad","plot", "not", "scenery"),
+        <b>in this order</b>. For example: $[0.1, 0.2,0.3,0.4,0.5, 0.6]$.
+      </div>
+    </li>
+
+    <li class="writeup" id="1b">
+      Given the following dataset of reviews:
+      <ol>
+        <li>($-1$) bad</li>
+        <li>($+1$) good</li>
+        <li>($+1$) not bad</li>
+        <li>($-1$) not good</li>
+      </ol>
+
+      Prove that no linear classifier using word features can get zero error on
+      this dataset. Remember that this is a question about classifiers, not
+      optimization algorithms; your proof should be true for any linear
+      classifier, regardless of how the weights are learned.
+      <br /><br />
+      Propose a single additional feature for your dataset that we could augment
+      the feature vector with that would fix this problem.
+
+      <div class="expected">
+        <ol>
+          <li>a short written proof (~3-5 sentences).</li>
+          <li>
+            a viable feature that would allow a linear classifier to have zero
+            error on the dataset (classify all examples correctly).
+          </li>
+        </ol>
+      </div>
+    </li>
+  </ol>
+
+  <!------------------------------------------------------------>
+  <div class="problemTitle">Problem 2: Predicting Movie Ratings</div>
+  <ol class="problem">
+    <p>
+      Suppose that we are now interested in predicting a numeric rating for
+      movie reviews. We will use a non-linear predictor that takes a movie
+      review $x$ and returns $\sigma(\mathbf w \cdot \phi(x))$, where $\sigma(z)
+      = (1 + e^{-z})^{-1}$ is the logistic function that squashes a real number
+      to the range $(0, 1)$. For this problem, assume that the movie rating $y$
+      is a real-valued variable in the range $[0, 1]$.
+      <br />
+      <b>Do not</b> use math software such as Wolfram Alpha to solve this
+      problem.
+    </p>
+
+    <li class="writeup" id="2a">
+      Suppose that we wish to use
+      <b>squared loss</b>. Write out the expression for $\text{Loss}(x, y,
+      \mathbf w)$ for a single datapoint $(x,y)$.
+      <div class="expected">
+        A mathematical expression for the loss. Feel free to use $\sigma$ in the
+        expression.
+      </div>
+    </li>
+
+    <li class="writeup" id="2b">
+      Given $\text{Loss}(x, y, \mathbf w)$ from the previous part, compute the
+      gradient of the loss with respect to w, $\nabla_w \text{Loss}(x, y,
+      \mathbf w)$. Write the answer in terms of the predicted value $p =
+      \sigma(\mathbf w \cdot \phi(x))$.
+      <div class="expected">
+        A mathematical expression for the gradient of the loss.
+      </div>
+    </li>
+
+    <li class="writeup" id="2c">
+      Suppose there is one datapoint $(x, y)$ with some arbitrary $\phi(x)$ and
+      $y = 1$. Specify conditions for $\mathbf w$ to make the magnitude of the
+      gradient of the loss with respect to $\mathbf w$ arbitrarily small (i.e.
+      minimize the magnitude of the gradient). Can the magnitude of the gradient
+      with respect to $\mathbf w$ ever be exactly zero? You are allowed to make
+      the magnitude of $\mathbf w$ arbitrarily large but not infinity.
+      <br /><br />
+      <i>
+        Hint: try to understand intuitively what is going on and what each part
+        of the expression contributes. If you find yourself doing too much
+        algebra, you're probably doing something suboptimal.
+      </i>
+      <p>
+        Motivation: the reason why we're interested in the magnitude of the
+        gradients is because it governs how far gradient descent will step. For
+        example, if the gradient is close to zero when $\mathbf w$ is very far
+        from the optimum, then it could take a long time for gradient descent to
+        reach the optimum (if at all). This is known as the
+        <i>vanishing gradient problem</i> when training neural networks.
+      </p>
+      <div class="expected">
+        1-2 sentences describing the conditions for $\mathbf w$ to minimize the
+        magnitude of the gradient, 1-2 sentences explaining whether the gradient
+        can be exactly zero.
+      </div>
+    </li>
+  </ol>
+
+  <!------------------------------------------------------------>
+  <div class="problemTitle">Problem 3: Sentiment Classification</div>
+
+  <p>
+    <img src="sentiment.jpg" />
+  </p>
+
+  In this problem, we will build a binary linear classifier that reads movie
+  reviews and guesses whether they are "positive" or "negative."
+  <br /><br />
+  <b
+    >Do not import any outside libraries (e.g. numpy) for any of the coding
+    parts.</b
+  >
+  Only standard python libraries and/or the libraries imported in the starter
+  code are allowed. In this problem, you must implement the functions without
+  using libraries like Scikit-learn.
+
+  <ol class="problem">
+    <li class="code" id="3a">
+      Implement the function <code>extractWordFeatures</code>, which takes a
+      review (string) as input and returns a feature vector $\phi(x)$, which is
+      represented as a <code>dict</code> in Python.
+    </li>
+
+    <li class="code" id="3b">
+      Implement the function <code>learnPredictor</code> using stochastic
+      gradient descent and minimize hinge loss. Print the training error and
+      validation error after each epoch to make sure your code is working. You
+      must get less than 4% error rate on the training set and less than 30%
+      error rate on the validation set to get full credit.
+    </li>
+
+    <li class="code" id="3c">
+      Write the <code>generateExample</code> function (nested in the
+      <code>generateDataset</code> function) to generate artificial data
+      samples.
+      <br />
+      <br />
+      Use this to double check that your
+      <code>learnPredictor</code> works! You can do this by using
+      <code>generateDataset()</code> to generate training and validation
+      examples. You can then pass in these examples as
+      <code>trainExamples</code> and
+      <code>validationExamples</code> respectively to
+      <code>learnPredictor</code> with the identity function
+      <code>lambda x: x</code> as a featureExtractor.
+    </li>
+
+    <li class="writeup" id="3d">
+      When you run the grader.py on test case <code>3b-2</code>, it should
+      output a <code>weights</code> file and a <code>error-analysis</code> file.
+      <br /><br />
+      Find <b>3</b> examples of incorrected predictions. For each example, give
+      a one-sentence explanation on why the classifier got it wrong. State what
+      additional information the classifier would need to get these examples
+      correct. <br /><br />
+      Note: The main point is to convey intuition about the problem. There isn't
+      always a single correct answer. You do not need to pick 3 different types
+      of errors and explain each. It suffices to show 3 instances of the same
+      type of error, and for each explain why the classification was incorrect.
+      <div class="expected">
+        <ol>
+          <li>
+            3 sample incorrect predictions, each with one sentence explaining
+            why the classifications for these sentences was incorrect.
+          </li>
+          <li>
+            a single separate paragraph (3-5 sentences) outlining what
+            information the classifier would need to get these predictions
+            correct.
+          </li>
+        </ol>
+      </div>
+    </li>
+
+    <li class="code" id="3e">
+      Some languages are written without spaces between words, so is splitting
+      the words really necessary or can we just naively consider strings of
+      characters that stretch across words? Implement the function
+      <code>extractCharacterFeatures</code> (by filling in the
+      <code>extract</code> function), which maps each string of $n$ characters
+      to the number of times it occurs, ignoring whitespace (spaces and tabs).
+    </li>
+
+    <li class="writeup" id="3f">
+      Run your linear predictor with feature extractor
+      <code>extractCharacterFeatures</code>. Experiment with different values of
+      $n$ to see which one produces the smallest validation error. You should
+      observe that this error is nearly as small as that produced by word
+      features. Why is this the case? <br /><br />
+      Construct a review (one sentence max) in which character $n$-grams
+      probably outperform word features, and briefly explain why this is so.
+      <br /><br />
+      <b>Note:</b> There is code in <code>submission.py</code> that will help
+      you test different values of $n$. Remember to write your final written
+      solution in sentiment.pdf.
+
+      <div class="expected">
+        <ol>
+          <li>
+            a short paragraph (~4-6) sentences. In the paragraph state which
+            value of $n$ produces the smallest validation error, why this is
+            likely the value that produces the smallest error.
+          </li>
+          <li>
+            a one-sentence review and explanation for when character $n$-grams
+            probably outperform word features.
+          </li>
+        </ol>
+      </div>
+    </li>
+  </ol>
+
+  <!------------------------------------------------------------>
+  <div class="problemTitle">Problem 4: K-means clustering</div>
+
+  Suppose we have a feature extractor $\phi$ that produces 2-dimensional feature
+  vectors, and a toy dataset $\mathcal D_\text{train} = \{x_1, x_2, x_3, x_4\}$
+  with
+  <ol type="1">
+    <li>$\phi(x_1) = [10, 0]$</li>
+    <li>$\phi(x_2) = [30, 0]$</li>
+    <li>$\phi(x_3) = [10, 20]$</li>
+    <li>$\phi(x_4) = [20, 20]$</li>
+  </ol>
+
+  <ol class="problem">
+    <li class="writeup" id="4a">
+      Run 2-means on this dataset until convergence. Please show your work. What
+      are the final cluster assignments $z$ and cluster centers $\mu$? Run this
+      algorithm twice with the following initial centers:
+      <ol type="1">
+        <li>$\mu_1 = [20, 30]$ and $\mu_2 = [20, -10]$</li>
+        <li>$\mu_1 = [0, 10]$ and $\mu_2 = [30, 20]$</li>
+      </ol>
+      <div class="expected">
+        Show the cluster centers and assignments for each step.
+      </div>
+    </li>
+
+    <li class="code" id="4b">
+      Implement the <code>kmeans</code> function. You should initialize your $k$
+      cluster centers to random elements of <code>examples</code>. <br /><br />
+      After a few iterations of k-means, your centers will be very dense
+      vectors. In order for your code to run efficiently and to obtain full
+      credit, you will need to precompute certain quantities. As a reference,
+      our code runs in under a second on cardinal, on all test cases. You might
+      find <code>generateClusteringExamples</code>
+      in util.py useful for testing your code.
+      <br /><br />
+      <b>Do not</b> use libraries such as Scikit-learn.
+    </li>
+
+    <li class="writeup" id="4c">
+      Sometimes, we have prior knowledge about which points should belong in the
+      same cluster. Suppose we are given a set $G$ of disjoint set of points
+      that must be assigned to the same cluster.
+      <br /><br />
+      For example, suppose we have 6 examples; then $G = \{ (1,5), (2,3,4), (6)
+      \}$ says that examples 2, 3, and 4 must be in the same cluster and that
+      examples 1 and 5 must be in the same cluster. 6 is in its own group and is
+      unbounded, so it can be freely assigned to its own cluster, or to a
+      cluster with any other group, depending on initialization and the value of
+      $K$ in kmeans.
+      <br /><br />
+      All examples must appear in $G$ exactly once.
+      <br /><br />
+      Provide the modified k-means algorithm that performs alternating
+      minimization on the reconstruction loss: $$\sum \limits_{i=1}^n \|
+      \mu_{z_i} - \phi(x_i) \|^2,$$ where $\mu_{z_i}$ is the assigned centroid
+      for the feature vector $\phi(x_i)$.
+      <br /><br />
+      <i>
+        Hint 1: recall that alternating minimization is when we are optimizing
+        two variables jointly by alternating which variable we keep constant. We
+        recommend starting by first keeping $z$ fixed and optimizing over $\mu$
+        and then keeping $\mu$ fixed and optimizing over $z$.
+      </i>
+      <br /><br />
+
+      <div class="expected">
+        A mathematical expression representing the modified cluster assignment
+        update rule for the k-means steps, and a brief explanation for each
+        step. Do not modify the problem setup or make additional assumptions on
+        the inputs.
+      </div>
+    </li>
+
+    <li class="writeup" id="4d">
+      What is the advantage of running K-means multiple times on the same
+      dataset with the same K, but different random initializations?
+      <div class="expected">A ~1-3 sentences explanation.</div>
+    </li>
+
+    <li class="writeup" id="4e">
+      If we scale all dimensions in our initial centroids and data points by
+      some factor, are we guaranteed to retrieve the same clusters after running
+      K-means (i.e. will the same data points belong to the same cluster before
+      and after scaling)? What if we scale only certain dimensions? If your
+      answer is yes, provide a short explanation; if not, give a counterexample.
+      counterexample.
+      <div class="expected">
+        This response should have two parts. The first should be a yes/no
+        response and explanation or counterexample for the first subquestion
+        (scaling all dimensions). The second should be a yes/no response and
+        explanation or counterexample for the second subquestion (scaling only
+        certain dimensions).
+      </div>
+    </li>
+  </ol>
+
+  <div
+    id="feedback"
+    data-survey-url="https://forms.gle/aQKBKturJqcK6jhU6"
+  ></div>
+</body>
