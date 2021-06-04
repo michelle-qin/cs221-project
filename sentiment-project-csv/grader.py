@@ -4,6 +4,8 @@ import graderUtil
 import util
 import string
 from util import *
+import sklearn
+from sklearn import metrics
 
 grader = graderUtil.Grader()
 submission = grader.load('submission')
@@ -61,14 +63,31 @@ def test3b1():
     grader.require_is_greater_than(0, weights["bye"])
 grader.add_basic_part('3b-1-basic', test3b1, max_seconds=2, description="test correct overriding of positive weight due to one negative instance with repeated words")
 
+def predictor(x, weights):
+    featureExtractor = submission.extractCharacterFeatures(5)#change to extractword for other one
+    if dotProduct(featureExtractor(x), weights) >= 0:
+        return 1
+    else:
+        return -1
+
 def test3b2():
     trainExamples = readExamples('filename-train.csv')
     validationExamples = readExamples('filename-validation.csv')
-    featureExtractor = submission.extractWordFeatures
+    #featureExtractor = submission.extractWordFeatures
+    featureExtractor = submission.extractCharacterFeatures(5) #larger -> lower test accuracy
     weights = submission.learnPredictor(trainExamples, validationExamples, featureExtractor, numEpochs=20, eta=0.01)
     outputWeights(weights, 'weights')
     outputErrorAnalysis(validationExamples, featureExtractor, weights, 'error-analysis')  # Use this to debug
     trainError = evaluatePredictor(trainExamples, lambda x : (1 if dotProduct(featureExtractor(x), weights) >= 0 else -1))
+    
+    test_label = []
+    predictions = []
+    for x, y in validationExamples:
+        test_label.append(y)
+        predictions.append(predictor(x, weights))
+    print("F1 SCORE: ")
+    print(sklearn.metrics.f1_score(test_label, predictions, average='binary', sample_weight=None, zero_division='warn'))
+    
     validationError = evaluatePredictor(validationExamples, lambda x : (1 if dotProduct(featureExtractor(x), weights) >= 0 else -1))
     print(("Official: train error = %s, validation error = %s" % (trainError, validationError)))
     grader.require_is_less_than(0.04, trainError)

@@ -2,7 +2,8 @@ import random
 import sys
 from collections import Counter
 import json
-
+import sklearn
+from sklearn import metrics
 import csv
 
 def dotProduct(d1, d2):
@@ -88,6 +89,14 @@ def evaluatePredictor(examples, predictor):
     of misclassiied examples.
     '''
     error = 0
+    # test_label = []
+    # predictions = []
+    # for x, y in examples:
+    #     test_label.append(y)
+    #     predictions.append(predictor(x))
+    # print("F1 SCORE: ")
+    # print(sklearn.metrics.f1_score(test_label, predictions, average='binary', sample_weight=None, zero_division='warn'))
+
     for x, y in examples:
         if predictor(x) != y:
             error += 1
